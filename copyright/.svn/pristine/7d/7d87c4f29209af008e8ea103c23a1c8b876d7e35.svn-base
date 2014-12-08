@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+		"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+		"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+<session-factory>
+	<!-- 表 begin -->
+	<mapping class="com.copyright.pojo.UserEntity" />
+	<mapping class="com.copyright.pojo.CourseEntity" />
+	<mapping class="com.copyright.pojo.TeacherEntity" />
+	<mapping class="com.copyright.pojo.FileEntity" />
+	<mapping class="com.copyright.pojo.TempEntity" />
+	<mapping class="com.copyright.pojo.ClassHeadEntity" />
+	<mapping class="com.copyright.pojo.StudentEntity" />
+	<mapping class="com.copyright.pojo.HomeworkEntity" />
+	<!-- 视图 end -->
+	<mapping class="com.copyright.pojo.HomeworkStudentEntity" />
+	<mapping class="com.copyright.pojo.HomeworkTemplateEntity" />
+	<mapping class="com.copyright.pojo.ActiveCodeEntity" />
+</session-factory>
+</hibernate-configuration>

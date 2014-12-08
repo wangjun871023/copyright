@@ -1,0 +1,920 @@
+/**
+ * Copyright (c) 2005-2010 springside.org.cn
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * $Id: HibernateDao.java 1205 2010-09-09 15:12:17Z xiaoxiu $
+ */
+package com.copyright.common.hibernate;
+
+import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Disjunction;
+import org.hibernate.criterion.MatchMode;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projection;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.internal.CriteriaImpl;
+import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.transform.ResultTransformer;
+import org.springframework.util.Assert;
+
+import com.copyright.common.base.BaseForm;
+import com.copyright.common.core.EntityDao;
+import com.copyright.common.core.Page;
+import com.copyright.common.core.PropertyFilter;
+import com.copyright.common.core.PropertyFilter.MatchType;
+import com.copyright.util.BaseFunction;
+import com.copyright.util.ReflectionUtils;
+import com.copyright.util.SysConst;
+
+
+
+/**
+ * 封装SpringSide扩展功能的Hibernat DAO泛型基类.
+ * 
+ * 扩展功能包括分页查询,按属性过滤条件列表查询.
+ * 可在Service层直接使用,也可以扩展泛型DAO子类使用,见两个构造函数的注释.
+ * 
+ * @param <T> DAO操作的对象类型
+ * @param <PK> 主键类型
+ * 
+ * @author xiao
+ */
+public class HibernateDao<T, PK extends Serializable> extends SimpleHibernateDao<T, PK> implements EntityDao<T>{
+	private static Long ZERO_LONG=new Long(0);
+	private static Integer ZERO_INT=new Integer(0);
+	private static String ZERO_STRING=new String("");
+	protected Log log=LogFactory.getLog(getClass());  
+	private Boolean isCache=true;
+
+	/**
+	 * 用于Dao层子类的构造函数.
+	 * 通过子类的泛型定义取得对象类型Class.
+	 * eg.
+	 * public class UserDao extends HibernateDao<User, Long>{
+	 * }
+	 */
+	public HibernateDao() {
+		super();
+	}
+
+	/**
+	 * 用于省略Dao层, Service层直接使用通用HibernateDao的构造函数.
+	 * 在构造函数中定义对象类型Class.
+	 * eg.
+	 * HibernateDao<User, Long> userDao = new HibernateDao<User, Long>(sessionFactory, User.class);
+	 */
+	public HibernateDao(final SessionFactory sessionFactory, final Class<T> entityClass) {
+		super(sessionFactory, entityClass);
+	}
+
+	//-- 分页查询函数 --//
+
+	/**
+	 * 分页获取全部对象.
+	 */
+	public Page<T> getAll(final Page<T> page) {
+		return findPage(page);
+	}
+	/**
+	 * 按HQL分页查询.
+	 * 
+	 * @param page 分页参数. 注意不支持其中的orderBy参数.
+	 * @param hql hql语句.
+	 * @param values 数量可变的查询参数,按顺序绑定.
+	 * 
+	 * @return 分页查询结果, 附带结果列表及所有查询输入参数.
+	 */
+	@SuppressWarnings("unchecked")
+	public Page<T> findPage(final Page<T> page, final String hql) {
+		Assert.notNull(page, "page不能为空");
+
+		Query q = createQuery(hql);
+
+		if (page.isAutoCount()) {
+			long totalCount = countHqlResult(hql);
+			page.setTotalCount(totalCount);
+		}
+
+		setPageParameterToQuery(q, page);
+
+		List result = q.list();
+		page.setData(result);
+		return page;
+	}
+	/**
+	 * 按HQL分页查询.
+	 * 
+	 * @param page 分页参数. 注意不支持其中的orderBy参数.
+	 * @param hql hql语句.
+	 * @param values 数量可变的查询参数,按顺序绑定.
+	 * 
+	 * @return 分页查询结果, 附带结果列表及所有查询输入参数.
+	 */
+	@SuppressWarnings("unchecked")
+	public Page<T> findPage(final Page<T> page, final String hql, final Object... values) {
+		Assert.notNull(page, "page不能为空");
+
+		Query q = createQuery(hql, values);
+
+		if (page.isAutoCount()) {
+			long totalCount = countHqlResult(hql, values);
+			page.setTotalCount(totalCount);
+		}
+
+		setPageParameterToQuery(q, page);
+
+		List result = q.list();
+		page.setData(result);
+		return page;
+	}
+
+	/**
+	 * 按HQL分页查询.
+	 * 
+	 * @param page 分页参数. 注意不支持其中的orderBy参数.
+	 * @param hql hql语句.
+	 * @param values 命名参数,按名称绑定.
+	 * 
+	 * @return 分页查询结果, 附带结果列表及所有查询输入参数.
+	 */
+	@SuppressWarnings("unchecked")
+	public Page<T> findPage(final Page<T> page, final String hql, final Map<String, ?> values) {
+		Assert.notNull(page, "page不能为空");
+
+		Query q = createQuery(hql, values);
+
+		if (page.isAutoCount()) {
+			long totalCount = countHqlResult(hql, values);
+			page.setTotalCount(totalCount);
+		}
+
+		setPageParameterToQuery(q, page);
+
+		List result = q.list();
+		page.setData(result);
+		return page;
+	}
+
+	/**
+	 * 按Criteria分页查询.
+	 * 
+	 * @param page 分页参数.
+	 * @param criterions 数量可变的Criterion.
+	 * 
+	 * @return 分页查询结果.附带结果列表及所有查询输入参数.
+	 */
+	@SuppressWarnings("unchecked")
+	public Page<T> findPage(final Page<T> page, final Criterion... criterions) {
+		Assert.notNull(page, "page不能为空");
+
+		Criteria c = createCriteria(criterions);
+
+		if (page.isAutoCount()) {
+			long totalCount = countCriteriaResult(c);
+			page.setTotalCount(totalCount);
+		}
+
+		setPageParameterToCriteria(c, page);
+
+		List result = c.list();
+		page.setData(result);
+		return page;
+	}
+
+	/**
+	 * 设置分页参数到Query对象,辅助函数.
+	 */
+	protected Query setPageParameterToQuery(final Query q, final Page<T> page) {
+		Assert.isTrue(page.getPageSize() > 0, "Page Size must larger than zero");
+
+		//hibernate的firstResult的序号从0开始
+		q.setFirstResult(page.getFirst() - 1);
+		q.setMaxResults(page.getPageSize());
+		return q;
+	}
+
+	/**
+	 * 设置分页参数到Criteria对象,辅助函数.
+	 */
+	protected Criteria setPageParameterToCriteria(final Criteria c, final Page<T> page) {
+
+		Assert.isTrue(page.getPageSize() > 0, "Page Size must larger than zero");
+
+		//hibernate的firstResult的序号从0开始
+		c.setFirstResult(page.getFirst() - 1);
+		c.setMaxResults(page.getPageSize());
+
+		if (page.isOrderBySetted()) {
+			String[] orderByArray = StringUtils.split(page.getOrderBy(), ',');
+			String[] orderArray = StringUtils.split(page.getOrder(), ',');
+
+			Assert.isTrue(orderByArray.length == orderArray.length, "分页多重排序参数中,排序字段与排序方向的个数不相等");
+
+			for (int i = 0; i < orderByArray.length; i++) {
+				if (Page.ASC.equals(orderArray[i])) {
+					c.addOrder(Order.asc(orderByArray[i]));
+				} else {
+					c.addOrder(Order.desc(orderByArray[i]));
+				}
+			}
+		}
+		return c;
+	}
+	/**
+	 * 执行count查询获得本次Hql查询所能获得的对象总数.
+	 * 
+	 * 本函数只能自动处理简单的hql语句,复杂的hql查询请另行编写count语句查询.
+	 */
+	protected long countHqlResult(final String hql) {
+		String countHql = prepareCountHql(hql);
+
+		try {
+			Long count = findUnique(countHql);
+			return count;
+		} catch (Exception e) {
+			throw new RuntimeException("hql can't be auto count, hql is:" + countHql, e);
+		}
+	}
+	/**
+	 * 执行count查询获得本次Hql查询所能获得的对象总数.
+	 * 
+	 * 本函数只能自动处理简单的hql语句,复杂的hql查询请另行编写count语句查询.
+	 */
+	protected long countHqlResult(final String hql, final Object... values) {
+		String countHql = prepareCountHql(hql);
+
+		try {
+			Long count = findUnique(countHql, values);
+			return count;
+		} catch (Exception e) {
+			throw new RuntimeException("hql can't be auto count, hql is:" + countHql, e);
+		}
+	}
+
+	/**
+	 * 执行count查询获得本次Hql查询所能获得的对象总数.
+	 * 
+	 * 本函数只能自动处理简单的hql语句,复杂的hql查询请另行编写count语句查询.
+	 */
+	protected long countHqlResult(final String hql, final Map<String, ?> values) {
+		String countHql = prepareCountHql(hql);
+
+		try {
+			Long count = findUnique(countHql, values);
+			return count;
+		} catch (Exception e) {
+			throw new RuntimeException("hql can't be auto count, hql is:" + countHql, e);
+		}
+	}
+
+	private String prepareCountHql(String orgHql) {
+		String fromHql = orgHql;
+		//select子句与order by子句会影响count查询,进行简单的排除.
+		fromHql = "from " + StringUtils.substringAfter(fromHql, "from");
+		fromHql = StringUtils.substringBefore(fromHql, "order by");
+
+		String countHql = "select count(*) " + fromHql;
+		return countHql;
+	}
+
+	/**
+	 * 执行count查询获得本次Criteria查询所能获得的对象总数.
+	 */
+	@SuppressWarnings("unchecked")
+	protected long countCriteriaResult(final Criteria c) {
+		CriteriaImpl impl = (CriteriaImpl) c;
+
+		// 先把Projection、ResultTransformer、OrderBy取出来,清空三者后再执行Count操作
+		Projection projection = impl.getProjection();
+		ResultTransformer transformer = impl.getResultTransformer();
+
+		List<CriteriaImpl.OrderEntry> orderEntries = null;
+		try {
+			orderEntries = (List) ReflectionUtils.getFieldValue(impl, "orderEntries");
+			ReflectionUtils.setFieldValue(impl, "orderEntries", new ArrayList());
+		} catch (Exception e) {
+			logger.error("不可能抛出的异常:{}", e.getMessage());
+		}
+
+		// 执行Count查询
+		Long totalCountObject = (Long) c.setProjection(Projections.rowCount()).uniqueResult();
+		long totalCount = (totalCountObject != null) ? totalCountObject : 0;
+
+		// 将之前的Projection,ResultTransformer和OrderBy条件重新设回去
+		c.setProjection(projection);
+
+		if (projection == null) {
+			c.setResultTransformer(CriteriaSpecification.ROOT_ENTITY);
+		}
+		if (transformer != null) {
+			c.setResultTransformer(transformer);
+		}
+		try {
+			ReflectionUtils.setFieldValue(impl, "orderEntries", orderEntries);
+		} catch (Exception e) {
+			logger.error("不可能抛出的异常:{}", e.getMessage());
+		}
+
+		return totalCount;
+	}
+
+	//-- 属性过滤条件(PropertyFilter)查询函数 --//
+
+	/**
+	 * 按属性查找对象列表,支持多种匹配方式.
+	 * 
+	 * @param matchType 匹配方式,目前支持的取值见PropertyFilter的MatcheType enum.
+	 */
+	public List<T> findBy(final String propertyName, final Object value, final MatchType matchType) {
+		Criterion criterion = buildCriterion(propertyName, value, matchType);
+		return find(criterion);
+	}
+
+	/**
+	 * 按属性过滤条件列表查找对象列表.
+	 */
+	public List<T> find(List<PropertyFilter> filters) {
+		Criterion[] criterions = buildCriterionByPropertyFilter(filters);
+		return find(criterions);
+	}
+
+	/**
+	 * 按属性过滤条件列表分页查找对象.
+	 */
+	public Page<T> findPage(final Page<T> page, final List<PropertyFilter> filters) {
+		Criterion[] criterions = buildCriterionByPropertyFilter(filters);
+		return findPage(page, criterions);
+	}
+
+	/**
+	 * 按属性条件参数创建Criterion,辅助函数.
+	 */
+	protected Criterion buildCriterion(final String propertyName, final Object propertyValue, final MatchType matchType) {
+		Assert.hasText(propertyName, "propertyName不能为空");
+		Criterion criterion = null;
+		//根据MatchType构造criterion
+		switch (matchType) {
+		case EQ:
+			criterion = Restrictions.eq(propertyName, propertyValue);
+			break;
+		case LIKE:
+			criterion = Restrictions.like(propertyName, (String) propertyValue, MatchMode.ANYWHERE);
+			break;
+
+		case LE:
+			criterion = Restrictions.le(propertyName, propertyValue);
+			break;
+		case LT:
+			criterion = Restrictions.lt(propertyName, propertyValue);
+			break;
+		case GE:
+			criterion = Restrictions.ge(propertyName, propertyValue);
+			break;
+		case GT:
+			criterion = Restrictions.gt(propertyName, propertyValue);
+		}
+		return criterion;
+	}
+
+	/**
+	 * 按属性条件列表创建Criterion数组,辅助函数.
+	 */
+	protected Criterion[] buildCriterionByPropertyFilter(final List<PropertyFilter> filters) {
+		List<Criterion> criterionList = new ArrayList<Criterion>();
+		for (PropertyFilter filter : filters) {
+			if (!filter.hasMultiProperties()) { //只有一个属性需要比较的情况.
+				Criterion criterion = buildCriterion(filter.getPropertyName(), filter.getMatchValue(), filter
+						.getMatchType());
+				criterionList.add(criterion);
+			} else {//包含多个属性需要比较的情况,进行or处理.
+				Disjunction disjunction = Restrictions.disjunction();
+				for (String param : filter.getPropertyNames()) {
+					Criterion criterion = buildCriterion(param, filter.getMatchValue(), filter.getMatchType());
+					disjunction.add(criterion);
+				}
+				criterionList.add(disjunction);
+			}
+		}
+		return criterionList.toArray(new Criterion[criterionList.size()]);
+	}
+	
+	/**
+	 * 通过父节点,得到模块信息
+	 * @param father_id
+	 * @return
+	 */
+	public T getById(Object id){
+		T result=null;
+		Class idClass=null;
+		try{
+			if(id!=null){
+				// 反射获得entity的主键类型
+				try {
+					String idName = getIdName(entityClass); 
+					idClass = ReflectionUtils.getPropertyType(entityClass, idName);
+				} catch (Exception e) { 
+					log.error(e,e);
+				}
+				if(idClass.isInstance(ZERO_STRING)==true){
+					String key=(String)id;
+					if(BaseFunction.isEmpty(key)==false){
+						result=findUniqueBy("id",id);
+					}
+				}
+				else{
+					if(idClass.isInstance(ZERO_LONG)==true){
+						  if(((Long) id).longValue()>0){
+							  result=findUniqueBy("id",id); 
+						  }
+					}
+					else{
+						if(idClass.isInstance(ZERO_INT)==true){
+							if(((Integer) id).intValue()>0){
+							  result=findUniqueBy("id",id); 
+							} 
+					  }
+						else{
+						  result=findUniqueBy("id",id);
+						}
+					}
+				}
+			}
+		
+		}
+		catch(Exception ex){
+			log.error(ex,ex);
+		}
+		return result;
+	}
+	/**
+	  * 
+	  * @param code
+	  * @return
+	  * @throws Exception
+	  */
+	 public T  getByCode(String code) throws Exception{
+		 T result=null;   
+		  try{ 
+			  if(BaseFunction.isEmpty(code)==false){
+			    result=findUniqueBy("code",code);
+			  }
+		  }
+		  catch(Exception ex){
+		  	log.error( ex);
+		  } 
+		  return result;
+	 }		 
+	/**
+   * 新增数据
+   * @param temp 
+   * @return 大于0表示成功
+   */
+  public BaseForm create(final T entity) throws Exception{  
+  	  BaseForm result=new BaseForm();   
+  	  int temp=-1;   
+  	  try{  
+  	  	 result.setSuccess(false);
+         save(entity); 
+         result.setSuccess(true); 
+         temp=1; 
+         result.setResultInt(temp);
+  	  }
+  	  catch(Exception ex){ 
+  	  	 temp=-1;
+  	  	 result.setSuccess(false);
+  	  	 result.setResultInt(temp);
+  	  	 log.error(ex);
+  		   throw ex;
+  	  } 
+  	  return result;
+  }
+  
+  /**
+   * 修改数据
+   * @param temp 
+   * @return 大于0表示成功
+   */
+  public BaseForm update(final T entity) throws Exception{  
+  	BaseForm result=new BaseForm();   
+ 	  int temp=-1;   
+ 	  try{  
+ 	  	 result.setSuccess(false); 
+	  	 save(entity);	  	
+	  	 result.setSuccess(true); 
+       temp=1; 
+       result.setResultInt(temp);
+	  }
+	  catch(Exception ex){ 
+	  	 temp=-1;
+	  	 result.setSuccess(false);
+	  	 result.setResultInt(temp);
+	  	 log.error(ex);
+		   throw ex;
+	  } 
+	  return result;
+  }  
+  /**
+	 * 删除对象.
+	 * 
+	 * @param entity 对象必须是session中的对象或含id属性的transient对象.
+	 */
+	public void delete(final T entity) {
+	  super.delete(entity);
+	}
+  /**
+   * 删除用户信息
+   * @param ids 要删除的数据的id字符串,用 ":"分隔符分割
+   * @param temp
+   * @return
+   */
+  public BaseForm delete(Object ids,final T temp)throws Exception{
+  	BaseForm result=new BaseForm();
+  	List dataList=null;
+  	String[] idArr=null;  
+  	try{
+  		 result.setSuccess(false); 
+  			if(ids!=null){
+  				if(ids instanceof String){
+  					 String key=(String)ids;
+  					 if(BaseFunction.isEmpty(key)==false){
+  			  		  idArr=BaseFunction.strToArray(key,SysConst.SYS_SPLIT_COLON);
+  			  			if(idArr!=null&&idArr.length>0){
+  			  				dataList=getList(key,temp); 		 
+  			  				if(dataList!=null&&dataList.size()>0){ 
+  			  					//删除前先检测 是否该角色下有用户
+  			  					int size=dataList.size(); 
+  			  					size=dataList.size();
+  			  					for(int i=0;i<size;i++){   
+  			  						delete((T)dataList.get(i)); 
+  			  					} 
+  			  					result.setSuccess(true);  
+  			  			  }
+  			  			} 
+  			  	   } 
+  				}
+  			}  
+  	}
+  	catch(Exception ex){
+  		result.setSuccess(false);   		log.error(ex);
+  	}
+  	finally{ idArr=null; BaseFunction.clearList(dataList); dataList=null; 
+    }
+  	return result;
+  }
+  /**
+   * 得到分页数据
+   * @param form
+   * @param pageNo
+   * @param pageSize
+   * @return
+   */
+  public Page listPage(T form,int pageNo,int pageSize)throws Exception{
+  	Page result=null;
+  	Page page=null;
+  	HqlCondition condition=null;
+  	List param=null;
+  	try{
+  		page=new Page();
+  		page.setPageNo(pageNo);
+  		page.setPageSize(pageSize);
+  		condition=new HqlCondition();
+  		condition.setSelStr(" select table_entity");
+  		condition.setFromStr(" from "+form.getClass());
+  		condition.setWhereStr(" where 1=1 ");
+  		if(form!=null){
+  			param=new ArrayList();  
+  		}
+  		result=findPage(page,condition.toString(),param);
+  	}
+  	catch(Exception ex){
+  		log.error(ex);
+  	}
+  	finally{ condition=null; BaseFunction.clearList(param); param=null;}
+  	return result;
+  } 
+	/**
+   * 
+   * @param module_id 由，号分割的多个模块id,如:'1','2','3' 或 由:号分割的多个模块id,如:1:2:3
+   * @return
+   */
+  public List getList(String module_id,final T temp)throws Exception{ 
+  	HqlCondition condition=null;
+  	Object[] paramValueArr=null;
+  	List result=null;
+  	String[] ids=null;
+  	Class idClass=null;  
+		String idName=null;
+  	try { 
+  			//得到解析状态是还没有解析,解析还没有结束的数据
+  			if(BaseFunction.isEmpty(module_id)==false){
+  				condition=new HqlCondition();
+  				condition.setSelStr(" select table_entity ");
+  				condition.setFromStr(" from  " +temp.getClass().getName()+" as table_entity ");
+  				if(module_id.indexOf(",")>0){ 
+  					condition.setWhereStr(" where id in ("+module_id+")"); 
+  				}  
+  				else{
+  					ids=BaseFunction.strToArray(module_id,SysConst.SYS_SPLIT_COLON); 
+  					if(ids!=null&&ids.length>0){
+  						// 反射获得entity的主键类型
+  	  				try {
+  	  					idName = getIdName(entityClass);
+  	  					idClass = ReflectionUtils.getPropertyType(entityClass, idName);
+  	  				} catch (Exception e) { 
+  	  					idName="id";
+  	  				}
+  						paramValueArr=new Object[ids.length]; 
+  						condition.setWhereStr(" where  ");
+  						for(int i=0;i<ids.length;i++){
+  						  if(i>0){
+  							  condition.setWhereStr(" or ");
+  						  }
+  						  condition.setWhereStr(idName+"=?" );
+  						  if(idClass.isInstance(ZERO_INT)==true){
+  						  	 paramValueArr[i]=Integer.parseInt(ids[i]); 
+  						  }
+  						  else{
+  						  	 if(idClass.isInstance(ZERO_LONG)==true){
+   						  	 paramValueArr[i]=Long.parseLong(ids[i]); 
+   						    }
+  						    else{
+  	 						  	 paramValueArr[i]=ids[i]; 
+  	   						  }
+  						  }
+  						 
+  						}
+  					} 
+  				}
+  			
+
+  				result=this.find(condition.toString(),paramValueArr); 
+  			}  
+  	} catch(Exception ex) {
+  		log.error(ex); 
+  		throw ex;
+  	} finally {
+  		condition=null;
+  		 paramValueArr=null;
+  		 ids=null;
+  	}
+  	return result;
+  }
+  
+	/**
+	 * 取得对象的下一排序值,辅助函数.
+	 */
+	public int getNextSeqNo(String entityName) {
+		Assert.notNull(entityName);
+		int retval = 1;
+		// Count查询
+		String countQueryString = "select max(seqNo) from " + entityName;
+		Query q = createQuery(countQueryString);
+		if (q.uniqueResult() != null) {
+			retval = ((Integer) q.uniqueResult()).intValue() + 1;
+		}
+		return retval;
+	}
+
+	/**
+	 * 取得对象的下一排序值,辅助函数.
+	 */
+	public int getNextSeqNo(String entityName, String parentCode) {
+		Assert.notNull(entityName);
+		int retval = 1;
+		// Count查询
+		String countQueryString = "select max(seqNo) from " + entityName
+				+ " where parentCode = '" + parentCode + "'";
+
+		Query q = createQuery(countQueryString);
+		if (q.uniqueResult() != null) {
+			retval = ((Integer) q.uniqueResult()).intValue() + 1;
+		}
+		return retval;
+	}
+	
+	/**
+	 * 创建Criteria对象.
+	 * 
+	 * @param criterions
+	 *            可变的Restrictions条件列表,见{@link #createQuery(String,Object...)}
+	 */
+	public <T> Criteria createCriteria(Class<T> entityClass,
+			Criterion... criterions) {
+		Criteria criteria = getSession().createCriteria(entityClass);
+		for (Criterion c : criterions) {
+			criteria.add(c);
+		}
+		return criteria.setCacheable(isCache);
+	}
+
+	/**
+	 * 判断对象某些属性的值在数据库中是否唯一.
+	 * 
+	 * @param uniquePropertyNames
+	 *            在POJO里不能重复的属性列表,以逗号分割 如"name,loginid,password"
+	 */
+	public <T> boolean isUnique(Class<T> entityClass, Object entity,
+			String uniquePropertyNames) {
+		Assert.hasText(uniquePropertyNames);
+		Criteria criteria = createCriteria(entityClass).setProjection(
+				Projections.rowCount());
+		String[] nameList = uniquePropertyNames.split(",");
+		try {
+			// 循环加入唯一列
+			for (String name : nameList) {
+				criteria.add(Restrictions.eq(name, PropertyUtils.getProperty(
+						entity, name)));
+			}
+
+			// 以下代码为了如果是update的情况,排除entity自身.
+
+			String idName = getIdName(entityClass);
+
+			// 取得entity的主键值
+			Serializable id = getId(entityClass, entity);
+
+			// 如果id!=null,说明对象已存在,该操作为update,加入排除自身的判断
+			if (id != null)
+				criteria.add(Restrictions.not(Restrictions.eq(idName, id)));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return (Integer) criteria.uniqueResult() == 0;
+	}
+	/**
+	 * 判断对象某些属性的值在数据库中唯一.
+	 * 
+	 * @param uniquePropertyNames
+	 *            在POJO里不能重复的属性列表,以逗号分割 如"name,loginid,password"
+	 * @see HibernateGenericDao#isUnique(Class,Object,String)
+	 */
+	public boolean isUnique(Object entity, String uniquePropertyNames) {
+		return isUnique(getEntityClass(), entity, uniquePropertyNames);
+	}
+	/**
+	 * 取得entityClass.JDK1.4不支持泛型的子类可以抛开Class<T> entityClass,重载此函数达到相同效果。
+	 */
+	protected Class<T> getEntityClass() {
+		return entityClass;
+	}
+
+	/**
+	 * 取得对象的主键值,辅助函数.
+	 */
+	public Serializable getId(Class entityClass, Object entity)
+			throws NoSuchMethodException, IllegalAccessException,
+			InvocationTargetException {
+		Assert.notNull(entity);
+		Assert.notNull(entityClass);
+		return (Serializable) PropertyUtils.getProperty(entity,
+				getIdName(entityClass));
+	}
+
+	/**
+	 * 取得对象的主键名,辅助函数.
+	 */
+	public String getIdName(Class clazz) {
+		Assert.notNull(clazz);
+		ClassMetadata meta = getSessionFactory().getClassMetadata(clazz);
+		Assert.notNull(meta, "Class " + clazz
+				+ " not define in hibernate session factory.");
+		String idName = meta.getIdentifierPropertyName();
+		Assert.hasText(idName, clazz.getSimpleName()
+				+ " has no identifier property define.");
+		return idName;
+	}
+	public Boolean getIsCache() {
+		return isCache;
+	}
+  
+	public void setIsCache(Boolean isCache) {
+		this.isCache = isCache;
+	}
+
+   /**
+    * 得到主键最大数值
+    * 组合的hql语句:select max("+idClassName+") from "+entity+" where "+idClassName+">0 "
+    * @param idClassName 主键id字段名,默认为id
+    * @param entity
+    * @return
+    */
+	public Integer getMax(String idClassName,final T entity) {
+		Integer result=null;
+		List list =null;
+		String[] paramArr=null;
+		try {
+			String hql = "select max("+idClassName+") from "+entity.getClass().getName()+" where "+idClassName+">0 ";
+			list = this.find(hql, paramArr);
+			if(list!=null&&list.size()>0){
+				if(list.get(0) instanceof Integer){
+			   	result=(Integer)list.get(0)+1;
+				}
+				else{
+					if(list.get(0) instanceof Long){
+				   	Long temp=(Long)list.get(0);
+				   	result=new Integer(temp.intValue()+1);
+					}
+					else{
+						result=new Integer(1);
+					}
+				}
+			}
+		} catch (RuntimeException ex) {
+			log.error(ex); 
+		}
+		finally{
+			BaseFunction.clearList(list);list=null;
+		}
+		return result;
+	}
+	
+	/**
+   * 得到主键最大数值
+   * 组合的hql语句:select max("+idClassName+") from "+entity+" where "+idClassName+">0 "
+   * @param idClassName 主键id字段名,默认为id
+   * @param entity
+   * @return
+   */
+	public Long getMaxLong(String idClassName,final T entity) {
+		Long result=null;
+		List list =null;
+		String[] paramArr=null;
+		try {
+			String hql = "select max("+idClassName+") from "+entity.getClass().getName()+" where "+idClassName+">0 ";
+			list = this.find(hql, paramArr);
+			if(list!=null&&list.size()>0){
+				if(list.get(0) instanceof Integer){
+					Integer temp=(Integer)list.get(0);
+					result=new Long(temp.intValue()+1);
+				}
+				else{
+					if(list.get(0) instanceof Long){
+				   	result=(Long)list.get(0)+1;
+					}
+					else{
+						result=new Long(1);
+					}
+				}
+				
+			}
+		} catch (RuntimeException ex) {
+			log.error(ex,ex); 
+		}
+		finally{
+			BaseFunction.clearList(list);list=null;
+		}
+		return result;
+	}
+	
+	/**
+	 * 释放数据资源 by rhine
+	 */
+	protected void doClose(Session session, Statement stmt, ResultSet rs){ 
+		if(rs != null){
+			try {
+				rs.close();
+				rs=null;
+			} catch (Exception ex) {
+				rs=null;
+				log.error(ex,ex);
+				ex.printStackTrace();
+			}
+		} 
+		// Statement对象关闭时,会自动释放其管理的一个ResultSet对象
+		if(stmt != null){
+			try {
+				stmt.close();
+				stmt=null;
+			} catch (Exception ex) {
+				stmt=null;
+				log.error(ex,ex);
+				ex.printStackTrace();
+			}
+		}
+//		当Hibernate的事务由Spring接管时,session的关闭由Spring管理.不用手动关闭
+//		if(session != null){
+//			session.close();
+//		}
+	}
+	 
+
+}

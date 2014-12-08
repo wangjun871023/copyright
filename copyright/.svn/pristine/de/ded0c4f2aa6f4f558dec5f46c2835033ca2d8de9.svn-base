@@ -1,0 +1,104 @@
+#email settings
+email.hostName=smtp.163.com
+email.smtpPort=25
+email.smtpUsername=flychensoftware
+email.smtpPassword=358381790
+email.fromMailAddress=flychensoftware@163.com
+email.fromName=flychensoftware
+#email settings end
+
+#upload file path begin
+sys_upload_file_path=d\:\\idsserver\\fileserver\\uploadfilepath
+mf_cache_file_path=d\:\\idsserver\\mfcache
+sys_upload_report_path=D\:\\idsserver\\tomcat6-report\\webapps\\report\\report\\reportFiles\\
+sys_upload_flash_path=D\:\\idsserver\\tomcat6-report\\webapps\\webchart\\Module\\
+download_path=d\:\\idsserver\\fileserver\\newsqlite\\sqlite\\
+#upload file path end
+#hibernate settings
+hibernate.show_sql=true
+hibernate.format_sql=true
+hibernate.cache.use_query_cache=true
+hibernate.cache.provider_class=net.sf.ehcache.hibernate.SingletonEhCacheProvider
+hibernate.ehcache_config_file=/ehcache/ehcache-hibernate-local.xml 
+
+#DBCP\u00e8\u00bf\u009e\u00e6\u008e\u00a5\u00e6\u00b1\u00a0\u00e9\u0085\u008d\u00e7\u00bd\u00ae
+jdbc.initialSize=50
+jdbc.maxActive=100
+jdbc.maxIdle=40
+jdbc.maxWait=60000
+jdbc.defaultAutoCommit=false
+jdbc.removeAbandoned=true
+jdbc.removeAbandonedTimeout=600
+jdbc.poolPreparedStatements=true
+jdbc.logAbandoned=false
+
+
+
+#mysql version database setting
+jdbc.driver=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/copyright?useUnicode=true&characterEncoding=utf-8
+jdbc.username=root
+jdbc.password=123
+hibernate.dialect=org.hibernate.dialect.MySQL5InnoDBDialect
+
+#sqlserver 2000 version database settings
+#hibernate.dialect=org.hibernate.dialect.SQLServerDialect
+#jdbc.driver=com.microsoft.jdbc.sqlserver.SQLServerDriver
+#jdbc.url=jdbc:microsoft:sqlserver://localhost:1433;SelectMethod=cursor;DatabaseName=cmspro_yb_41
+#jdbc.username=miniservice
+#jdbc.password=miniservice
+
+#oracle version database settings
+#hibernate.dialect=org.hibernate.dialect.Oracle10gDialect
+#hibernate.dialect=org.hibernate.dialect.Oracle9iDialect
+#jdbc.driver=oracle.jdbc.driver.OracleDriver
+#jdbc.driver=oracle.jdbc.OracleDriver
+#jdbc.url=jdbc\:oracle\:thin\:@192.168.1.7\:1521\:navilogistics
+
+#jdbc.url=jdbc\:oracle\:thin\:@10.78.81.9\:1521\:orcl 
+#jdbc.username=wlpt
+#jdbc.password=wlpt
+#sqlserver 2005 version database settings
+#hibernate.dialect=org.hibernate.dialect.SQLServerDialect
+#jdbc.driver=com.microsoft.sqlserver.jdbc.SQLServerDriver
+#jdbc.url=jdbc:sqlserver://10.77.193.22:1433;SelectMethod=cursor;DatabaseName=ids_sales_yingxiao
+#jdbc.url=jdbc:sqlserver://192.168.1.115:1433;SelectMethod=cursor;DatabaseName=ids_sales_yingxiao
+#jdbc.username=sa
+#jdbc.password=sa
+
+
+#jtds version database settings
+#jdbc.driver=net.sourceforge.jtds.jdbc.Driver
+#jdbc.url=jdbc:jtds:sqlserver://localhost:1433/cmspro_yb_41;tds=8.0;lastupdatecount=true
+#jdbc.username=cmspro
+#jdbc.password=cmspro
+#hibernate.dialect=org.hibernate.dialect.SQLServerDialect
+
+sqlite.driver=org.sqlite.JDBC
+sqlite.url=jdbc:sqlite:
+#sqlite.user=weisheng 
+#sqlite.password=+*weishengworkfile
+sqlite.user=
+sqlite.password=
+
+#c3p0\u00e8\u00bf\u009e\u00e6\u008e\u00a5\u00e6\u00b1\u00a0\u00e9\u0085\u008d\u00e7\u00bd\u00ae
+# Time to wait for an open connection before timing out
+# (in milliseconds)
+cpool.checkoutTimeout=5000
+
+# Connection pool size
+cpool.minPoolSize=5
+cpool.maxPoolSize=10
+
+# How long to keep unused connections around(in seconds)
+# Note: MySQL times out idle connections after 8 hours(28,800 seconds)
+# so ensure this value is below MySQL idle timeout
+cpool.maxIdleTime=1200
+
+# How long to hang on to excess unused connections after traffic spike
+# (in seconds)
+cpool.maxIdleTimeExcessConnections=1800
+
+# Acquiring new connections is slow, so eagerly retrieve extra connections
+# when current pool size is reached
+cpool.acquireIncrement=5

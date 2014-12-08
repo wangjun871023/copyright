@@ -1,0 +1,212 @@
+package com.copyright.dao.impl;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.stereotype.Repository;
+
+import com.copyright.common.hibernate.HibernateDao;
+import com.copyright.dao.UserDao;
+import com.copyright.i18n.Constants;
+import com.copyright.pojo.ClassHeadEntity;
+import com.copyright.pojo.StudentEntity;
+import com.copyright.pojo.TeacherEntity;
+import com.copyright.pojo.UserEntity;
+import com.copyright.util.Md5Util;
+
+@Repository
+public class UserDaoImpl extends HibernateDao<UserEntity, String> implements UserDao{
+	/**
+	 *通过 username password courseId identityId确定唯一用户
+	 */
+	@Override
+	public UserEntity findUserBy4Info(String username, String password,
+			String courseValue, String identityValue) {
+		String hql = "select entity from UserEntity entity " +
+				"where entity.userName = ? and entity.userPassword = ? " +
+				"and entity.courseId = ? and entity.identityId = ?";
+		List<UserEntity> list = find(hql,username,password,courseValue,identityValue);
+		if (list!=null && list.size()>0){
+			return list.get(0);
+		}
+		return null;
+	}
+
+	/**
+	 *通过 username questionOfPassword answerOfPassword确定唯一用户
+	 */
+	@Override
+	public List<UserEntity> findUsersBy3Info(String username,
+			String questionOfPassword, String answerOfPassword) {
+		String hql = "select entity from UserEntity entity " +
+				"where entity.userName = ? and entity.userPasswordQuestion = ? " +
+				"and entity.userPasswordAnswer = ?";
+		List<UserEntity> list = find(hql,username,questionOfPassword,answerOfPassword);
+		if (list!=null && list.size()>0){
+			return list;
+		}
+		return null;
+	}
+
+	/**
+	 * 通过用户名username得到User对象
+	 */
+	@Override
+	public UserEntity findUserByUserName(String username) {
+		String hql = "select entity from UserEntity entity " +
+				"where entity.userName = ? ";
+		List<UserEntity> users = find(hql,username);
+		if (users!=null&&users.size()>0){
+			return users.get(0);
+		}
+		return null;
+	}
+
+	/**
+	 * 通过教师用户新增用户
+	 */
+	@Override
+	public void createUsersByTeachers(List<TeacherEntity> list,HttpServletRequest request) {
+		if (list!=null&& list.size()>0){
+			UserEntity userEntity = (UserEntity) request.getSession().getAttribute(Constants.LOGIN_USER_ENTITY);
+			if (userEntity!=null){
+				for (TeacherEntity teacherEntity : list) {
+					UserEntity user = new UserEntity();
+					user.setIdentityId(Constants.IDENTITY_TEACHER);
+					user.setCreateTime(System.currentTimeMillis()+"");
+					user.setUpdateTime(System.currentTimeMillis()+"");
+					user.setUserCode(teacherEntity.getId());
+					user.setUserName(teacherEntity.getTeacherCode());
+					user.setCourseId(teacherEntity.getCourseId());
+					user.setUserPassword(Md5Util.md5(teacherEntity.getTeacherCode()));
+					user.setCreateUserId(userEntity.getId());
+					save(user);
+				}
+			}
+		}
+	}
+
+	/**
+	 * 删除教师用户dao
+	 */
+	@Override
+	public void deleteTeacherUsers(List<TeacherEntity> list) {
+		for (TeacherEntity teacher : list) {
+			String hql = "select entity from UserEntity entity " +
+					"where entity.userCode = ? ";
+			List<UserEntity> users = find(hql,teacher.getId());
+			if (users!=null&&users.size()>0){
+				delete(users.get(0));
+			}
+		}
+	}
+	/**
+	 * 更新用户密码
+	 */
+	@Override
+	public void updateResetPassword(UserEntity user) {
+		user.setUserPassword(Md5Util.md5(user.getUserName()));
+		save(user);
+	}
+	
+	
+	/**
+	 * 创建学生用户
+	 */
+	@Override
+	public void createUsersByStudents(List<StudentEntity> list) {
+		if (list!=null && list.size()>0){
+			for (StudentEntity studentEntity : list) {
+				UserEntity user = new UserEntity();
+				user.setIdentityId(Constants.IDENTITY_TEACHER);
+				
+				user.setCreateTime(System.currentTimeMillis()+"");
+				user.setUpdateTime(System.currentTimeMillis()+"");
+				
+				user.setUserCode(studentEntity.getId());
+				user.setUserName(studentEntity.getStudentCode());
+				user.setUserPassword(Md5Util.md5(studentEntity.getStudentCode()));
+				save(user);
+			}
+		}
+	}
+	
+	
+	@Override
+	public void createIntoUserTable(String fileId,String classHeadId,String courseId) {
+		String sql = "insert into user_table" +
+				"(id,user_code," +
+				"user_name,user_password,course_id,identity_id,class_head_id) " +
+				"select temp_table.id," +
+				"temp_table.id," +
+				"temp_table.column1," +
+				"md5(temp_table.column1),?,?,? " +
+				"from temp_table " +
+				"where temp_table.file_id = ?";
+		int results = getSession().createSQLQuery(sql).
+				setString(0,courseId).
+				setString(1, Constants.IDENTITY_STUDENT).
+				setString(2,classHeadId).
+				setString(3, fileId).executeUpdate();
+	}
+
+	@Override
+	public void deleteStudentUsers(List<ClassHeadEntity> list) {
+		if (list!=null && list.size()>0){
+			for (ClassHeadEntity classHeadEntity : list) {
+				String hql = "select entity from UserEntity entity " +
+						"where entity.classHeadId = ? ";
+				List<UserEntity> users = find(hql,classHeadEntity.getId());
+				if (users!=null&&users.size()>0){
+					for (UserEntity userEntity : users) {
+						delete(userEntity);
+					}
+				}
+			}
+		}
+	}
+	
+	@Override
+	public void deleteUsersByStudents(List<StudentEntity> list) {
+		if (list!=null&&list.size()>0){
+			for (StudentEntity studentEntity : list) {
+				UserEntity user = findUserByUserName(studentEntity.getStudentCode());
+				if (user!=null){
+					delete(user);
+				}
+			}
+		}
+	}
+
+	@Override
+	public void createPassWordBackInfo(String username,
+		String questionOfPassword, String answerOfPassword) {
+		UserEntity user = findUserByUserName(username);
+		if(user!=null){
+			user.setUserPasswordQuestion(questionOfPassword);
+			user.setUserPasswordAnswer(answerOfPassword);
+			save(user);
+		}
+	}
+
+	@Override
+	public List<UserEntity> findUserByUsernameAndPassword(String username, String password) {
+		String hql = "select entity from UserEntity entity " +
+				"where entity.userName = ? and entity.userPassword = ? ";
+		String pass = Md5Util.md5(password);
+		
+		//6b6452efacfce71b8a781e476efff8bd
+		List<UserEntity> list = find(hql,username,pass);
+		if (list!=null && list.size()>0){
+			return list;
+		}
+		return null;
+		
+	}
+
+	@Override
+	public void updateUser(UserEntity user) {
+		save(user);
+	}
+}

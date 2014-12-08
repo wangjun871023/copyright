@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>计算机课程服务平台</title>
+<!--Ext-->
+<link rel="stylesheet" type="text/css"
+	href="../../common/ext4/resources/css/ext-all.css" />
+<script type="text/javascript" src="../../common/ext4/ext-all-debug.js"></script>
+<script type="text/javascript"
+	src="../../common/ext4/locale/ext-lang-zh_CN.js"></script>
+
+
+
+<!--desktop-->
+<link rel="stylesheet" type="text/css"
+	href="../../common/css/desktop.css" />
+<script type="text/javascript" src="common/commonObjects.js"></script>
+<!--数据字典-->
+<script type="text/javascript" src="../i18n/dic.js"></script>
+
+<script type="text/javascript">
+        Ext.Loader.setPath({
+            'Ext.ux.desktop': 'desktopjs',
+             MyDesktop: '',
+			'Ext.ux': '../../common/ext4/src/ux'
+        });
+
+        Ext.require('MyDesktop.App');
+
+      
+        Ext.onReady(function () {
+            myDesktopApp = new MyDesktop.App();
+        });
+    </script>
+</head>
+<body>
+	<!-- 
+	<a href="http://www.sencha.com" target="_blank" alt="Powered by Ext JS"
+		id="poweredby"><div></div>
+	</a>
+	 -->
+	<script type="text/javascript">
+	   Ext.Ajax.request({
+		    url: '/copyright/login.action',
+		    success: function(response){
+		    }
+		});	
+
+	    //监听浏览器关闭事件，如果窗口关闭或者页面刷新
+        window.onbeforeunload = onbeforeunload_handler;      
+	    function onbeforeunload_handler(){  
+	        var warning="确认离开当前系统吗？";      
+	        return warning;  
+	    }       
+  
+   
+   </script>
+</body>
+</html>

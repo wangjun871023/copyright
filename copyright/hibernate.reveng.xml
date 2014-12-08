@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-reverse-engineering PUBLIC "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-reverse-engineering-3.0.dtd" >
+
+<hibernate-reverse-engineering>
+	<table name="course_table" catalog="copyright"
+		class="com.copyright.pojo.CourseEntity">
+		<primary-key>
+			<generator class="uuid.hex"></generator>
+		</primary-key>
+	</table>
+	<table name="user_table" catalog="copyright"
+		class="com.copyright.pojo.UserEntity">
+		<primary-key>
+			<generator class="uuid.hex"></generator>
+		</primary-key>
+	</table>
+	<table name="teacher_table" catalog="copyright"
+		class="com.copyright.pojo.TeacherEntity">
+		<primary-key>
+			<generator class="uuid2"></generator>
+		</primary-key>
+	</table>
+	<table name="file_table" catalog="copyright"
+		class="com.copyright.pojo.FileEntity">
+		<primary-key>
+			<generator class="uuid2"></generator>
+		</primary-key>
+	</table>
+	<table name="temp_table" catalog="copyright"
+		class="com.copyright.pojo.TempEntity">
+		<primary-key>
+			<generator class="uuid2"></generator>
+		</primary-key>
+	</table>
+	<table name="class_head_table" catalog="copyright"
+		class="com.copyright.pojo.ClassHeadEntity">
+		<primary-key>
+			<generator class="uuid2"></generator>
+		</primary-key>
+	</table>
+	<table name="student_table" catalog="copyright"
+		class="com.copyright.pojo.StudentEntity">
+		<primary-key>
+			<generator class="uuid2"></generator>
+		</primary-key>
+	</table>
+	<table name="homework_table" catalog="copyright"
+		class="com.copyright.pojo.HomeworkEntity">
+		<primary-key>
+			<generator class="uuid2"></generator>
+		</primary-key>
+	</table>
+	<table name="homework_student_table" catalog="copyright"
+		class="com.copyright.pojo.HomeworkStudentEntity">
+		<primary-key>
+			<generator class="uuid2"></generator>
+		</primary-key>
+	</table>
+	<table name="homework_template_table" catalog="copyright"
+		class="com.copyright.pojo.HomeworkTemplateEntity">
+		<primary-key>
+			<generator class="uuid2"></generator>
+		</primary-key>
+	</table>
+<table name="active_code_table" catalog="copyright"
+	class="com.copyright.pojo.ActiveCodeEntity">
+	<primary-key>
+		<generator class="uuid2"></generator>
+	</primary-key>
+</table>
+</hibernate-reverse-engineering>

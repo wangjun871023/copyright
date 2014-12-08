@@ -1,0 +1,119 @@
+package com.copyright.service.impl;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts2.ServletActionContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.copyright.common.base.BaseForm;
+import com.copyright.dao.FileDao;
+import com.copyright.i18n.Constants;
+import com.copyright.pojo.FileEntity;
+import com.copyright.service.FileService;
+import com.copyright.util.FileUtils;
+import com.copyright.util.StringUtils;
+
+@Service
+public class FileServiceImpl implements FileService{
+	@Autowired
+	FileDao fileDao;
+	
+	/**
+	 * 查检文件的大小和类型
+	 */
+	@Override
+	public BaseForm checkUploadInfo(String filename,File file,String typeInfo,String size){
+		BaseForm baseForm = new BaseForm();
+		String[] types = typeInfo.split(",");
+		Set<String> typeSet = new HashSet<String>();
+		//类型
+		for (String type : types) {
+			typeSet.add(type.toLowerCase());
+		}
+		if (filename.lastIndexOf('.')>0){
+			String type = filename.substring(filename.lastIndexOf('.')+1);
+			if (!typeSet.contains(type.toLowerCase())){
+				baseForm.setInfo("请上传"+typeInfo+"类型的文件！");
+				baseForm.setSuccess(false);
+				return baseForm;
+			}
+		}else{
+			baseForm.setInfo("请上传"+typeInfo+"类型的文件！");
+			baseForm.setSuccess(false);
+			return baseForm;
+		}
+		//大小
+		if (file.length()>FileUtils.formatFileSize(size)){
+			baseForm.setInfo("请上传文件大小小于"+size+"的文件！");
+			baseForm.setSuccess(false);
+			return baseForm;
+		}
+		baseForm.setSuccess(true);
+		return baseForm;
+	}
+	
+	/**
+	 * 上传文件
+	 * 如何文件存在则先删除后增加
+	 * 
+	 */
+	public String uploadFile(File uploadFile, String uploadFileFileName,String fileId,HttpServletRequest httpServletRequest) throws Exception {
+		if(uploadFile!=null){
+			String realpath = ServletActionContext.getServletContext().getRealPath(Constants.UPLOAD_PATH);
+			String fileType = "unkown";
+			//如果fileId已经存在要删除 
+			if (!StringUtils.isEmpty(fileId)){
+				FileEntity fileEntity = fileDao.getFileById(fileId);
+				String name = fileEntity.getFileCode();
+				File file = new File(realpath+File.separator+name);
+				if (file.exists()){
+					file.delete();
+					fileDao.deleteFile(fileEntity);
+				}
+			}
+			//写入文件表
+			if (uploadFileFileName.lastIndexOf('.')>0){
+				fileType = uploadFileFileName.substring(uploadFileFileName.lastIndexOf('.'));
+	        }	
+			FileEntity file = fileDao.createIntoFileTable(uploadFile,fileType,uploadFileFileName,realpath, httpServletRequest);
+            if (uploadFileFileName.lastIndexOf('.')>0){
+            	uploadFileFileName = file.getId() +uploadFileFileName.substring(uploadFileFileName.lastIndexOf('.'));
+            }
+        	String filePathRoot = "uploadFiles/";
+        	String filePath = filePathRoot+uploadFileFileName;
+        	//下载时使用
+            file.setFilePath(filePath);
+            file.setFileCode(uploadFileFileName);
+            fileDao.save(file);
+			File savefile = new File(new File(realpath), uploadFileFileName);
+            if (!savefile.getParentFile().exists()){
+            	savefile.getParentFile().mkdirs();
+            }
+            org.apache.commons.io.FileUtils.copyFile(uploadFile, savefile);
+            return file.getId();
+		}
+		return null;
+	}
+	
+	/**
+	 * 删除服务器上的文件
+	 */
+	public void deleteUploadFile(String fileId){
+		if(!StringUtils.isEmpty(fileId)){
+			String realpath = ServletActionContext.getServletContext().getRealPath(Constants.UPLOAD_PATH);
+			FileEntity fileEntity = fileDao.getFileById(fileId);
+			String name = fileEntity.getFileCode();
+			File file = new File(realpath+"/"+name);
+			if (file.exists()){
+				file.delete();
+				fileDao.deleteFile(fileEntity);
+			}
+		}
+	}
+}

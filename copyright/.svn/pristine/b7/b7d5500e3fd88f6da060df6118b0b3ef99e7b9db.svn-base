@@ -1,0 +1,273 @@
+//commonStr
+	//文本框的最大，最小长度
+	var textfieldMinLength = 6;
+	var textfieldMaxLength = 20;
+
+	var bodyPaddingInt = 10;
+	var resetStr = '重置';
+	var submitStr = '确定';
+	var addStr = '增加';
+	var deleteStr = '删除';
+	var modifyStr = '修改';
+	var cancelStr = '取消';
+	var importStr = '导入';
+	var exportStr = '导出';
+	var templateStr = '下载模板';
+	var searchStr = '查找';
+	var comboboxEmptyText = '请选择';
+	var fieldTextEmptyText = '请输入';
+
+	var messageBoxTitle = '提示信息';
+	var messageBoxError = '系统出错！';
+	var waitMsgStr ='正在提交...';
+	var actionStr = '操作';
+	var studentNumberStr = '学号';
+	var sequenceStr = '序';
+	var cancelStr = '取消';
+	var accessoryStr = '附件';
+	var allStr = '所有作业';
+	var completeStr = '已完成';
+	var noCompleteStr = '未完成';
+	var readCompleteStr = '已批阅';
+	var noReadCompleteStr = '未批阅';
+	var statusStr = '当前状态';
+	var homeworkInfoStr = '作业信息';
+	var searchHomeworkInfoStr = '查看作业';
+	var scoreStr = '成绩';
+	var studentNameStr = '学生姓名';
+	
+	var validStr = '有效';
+	var invalidStr = '无效';
+	var allValidStr = '全部';
+	var validStatusStr = '有效性';
+	
+	var modifyInfoStr='请选择一条记录进行修改!';
+	var deleteInfoStr='请选择一条以上的记录进行删除!';
+	var validInfoStr='请选择一条以上的记录进行有效!';
+	var invalidInfoStr='请选择一条以上的记录进行无效!';
+	var addInfoStr='请选择一条记录进行增加!';
+	var deleteConfirmInfoStr='您确定删除所选择的记录吗？';
+	var validConfirmInfoStr='您确定有效所选择的记录吗？';
+	var invalidConfirmInfoStr='您确定无效所选择的记录吗？';
+	
+	var wallpaperStr='墙纸设置';
+	var loginOutStr='退出系统';
+	var activeStr = '已激活';
+	var inactiveStr = '未激活';
+	
+	
+/*系统窗口*/	
+//登录窗口
+	var userLoginWindowTitleStr = '用户登录窗口';
+	var userNameStr = '用户名';
+	var userPassStr =  '密码';
+	var courseSelectStr = '课程';
+	var courseNameStr = '课程名称';
+	var randomCodeStr = '验证码';
+	var passwordBackStr = "找回密码";
+	var modifyPasswordStr = "修改密码";
+	var passwordBackInfoStr = "密码信息";
+	
+	var identityStr = '身份';
+	var userloginWindowWidth = 650;
+	var userloginWindowHeight = 300;
+	var loginFormActionUrl = 'userlogin/login.action';
+	var loginPicSrc = '../../common/images/loginPic.jpg';
+//密码找回窗口
+	var userPasswordBackWindowTitleStr = '找回密码';
+	var questionOfPasswordStr = '密保问题';
+	var answerOfPasswordStr = '密保答案';
+	var backToLoginWinStr = '重新登录';
+	var userPasswordBackWindowWidth = 650;
+	var userPasswordBackWindowHeight = 300;
+	var backPasswordFormActionUrl = 'userlogin/backPassword.action';
+	var userPasswordBackPicSrc = '../../common/images/forgetPassword.gif';
+//用户密码确认窗口
+	var userPasswordBackConfirmWindowTitleStr = '密码确认窗口';
+	var userPasswordConfirmStr = '密码确认';
+	var userPasswordConfirmWidth = 650;
+	var userPasswordConfirmHeight = 300;
+	var userPasswordBackConfirmSrc = '../../common/images/confirmPassword.jpg';
+	var userPasswordConfirmActionUrl ='userlogin/userPasswordConfirm.action';
+	
+	
+	
+/*管理员*/
+//任课教师管理窗口
+	var teacherManagerWindowTitleStr ='任课教师用户管理';
+	var teacherManagerWindowWidth = 800;
+	var teacherManagerWindowHeight = 500;
+	var teacherNameStr = '教师姓名';
+	var teacherGenderStr = '性别';
+	var teacherGenderDefault = '男';
+	var academyStr = '学院';
+	var academyDefault = '计算机科学与技术';
+	var schoolOfTeacher = '学校';
+	var schoolOfTeacherDefault = '武汉理工大学';
+
+	var addTeacherStr = '添加教师';
+	var updateTeacherStr = '修改教师';
+	var deleteTeacherStr = '删除教师';
+//任课教师管理窗口-信息维护窗口
+	var TeacherManagerListEditWindowTitle = '教师修改用户窗口';
+	var TeacherManagerListCreateWindowTitle = '教师新增用户窗口';
+	var TeacherManagerListEditWindowWidth = 400;
+	var TeacherManagerListEditWindowHeight = 300;
+	var passwordResetStr = '重置密码';
+	var passwordConfirmInfoStr = '您确定重置这位用户的密码吗？';
+
+	var userNameCheckActionUrl = 'user/userNameCheck.action';
+	var passwordResetActionUrl = 'user/passwordReset.action';
+	
+	
+//学生管理窗口（未完）
+	var studentManagerWindowTitleStr ='学生用户管理';
+	var studentManagerWindowWidth = 1010;
+	var studentManagerWindowHeight = 500;
+	
+	
+/*教师*/
+//课头与学生管理
+	var courseStudentManagerWindowTitleStr = '课头与学生管理';
+	var courseStudentManagerWindowWidth = 1010;
+	var courseStudentManagerWindowHeight = 500;
+	var addStudentStr = '添加学生';
+	var modifyStudentStr = '修改学生';
+	var deleteStudentStr = '删除学生';
+	
+	var addCourseHeadStr = '添加课头';
+	var modifyCourseHeadStr = '修改课头';
+	var deleteCourseHeadStr = '删除课头';
+	var nameStr = '姓名';
+	var studyAgainStr = '重修';
+//课头与学生管理添加
+	var createCourseHeadWindowTitleStr = '添加课头窗口';
+	var createCourseHeadActionUrl = 'courseHead/createCourseHead.action';
+	var updateCourseHeadActionUrl = 'courseHead/updateCourseHead.action';
+	var courseHeadWindowWidth = 400;
+	var courseHeadWindowHeight = 300;
+	var courseHeadNameStr = '课头名称' ;
+	var courseTeacherStr = '任课教师';
+	var startDateStr ='开始时间';
+	var endDateStr = '结束时间';
+	var importExcelStr = '导入的Excel';
+	var courseExcelStr = '请选择导入的Excel';
+//课头信息管理
+	var classHeadManagerWindowTitleStr = '课头信息管理';
+	var classHeadManagerWindowWidth = 1010;
+	var classHeadManagerWindowHeight = 500;
+	
+//学生添加
+	var courseHeadStudentWindowWidth = 500;
+	var courseHeadStudentWindowHeight = 360;
+	var createStudentCourseHeadActionUrl = 'teacher/createStudent.action';
+	var createStudentWindowTitleStr = '添加学生到课头';
+//学生修改	
+	var updateStudentCourseHeadActionUrl = 'teacher/createStudent.action';
+	var updateStudentWindowTitleStr = '修改学生信息';
+	
+
+//作业布置与安排
+	var homeworkManagerWindowTitleStr = '作业布置与安排';
+	var addHomeworkStr = '新增作业';
+	var updateHomeworkStr = '修改作业';
+	var deleteHomeworkStr = '删除作业';
+	
+	var homeworkNameStr = '作业名称';
+	var studentNumFinishStr = '已完成人数';
+	var studentNumUndoStr = '非完成人数';
+	var deleteHomeworkStr = '删除作业';
+	var createHomeworkUrl = 'homework/createHomework.action';
+	var studentNumStr = '学生人数';
+	var updateHomeworkWindowTitleStr = '修改作业窗口';
+	var homeworkInfoWindowTitleStr = '作业信息';
+	
+	var homeworkNameStr = '作业名称';
+	var updateHomeworkUrl = 'homework/updateHomework.action';
+	
+	var studentDoHomeworkWindowTitle = '添加作业';
+	
+//新增作业窗口
+	var createHomeworkWindowTitleStr = '新增作业窗口';
+	var createHomeworkWindowWidth = 900;
+	var createHomeworkWindowHeight = 600;
+	var chooseStudentStr = "请选择学生名单!"
+	
+	
+	
+/*学生*/
+//学生激活课程窗口
+	var studentActiveCourseWindowTitleStr = '课程激活窗口';
+	var realNameStr = '真实姓名';
+	var genderStr = '性别';
+	var schoolStr = '学校';
+	var specialtyStr = '专业';
+	var gradeStr = '年级';
+	var classStr = '班级';
+	var studentNumberStr = '学号';
+	var teacherOfClassStr = '任课教师';
+	var pollCodeStr = '注册码';
+	var studentActiveCourseWindowWidth = 700;
+	var studentActiveCourseWindowHeight = 400;
+	
+	
+	
+	var homeworkInfoStr ='作业信息';
+	var homeworkContentStr = '主要内容';
+	var accessoryEmptyStr = '请选择上传的文件';
+	var studentInfoStr = '学生信息';
+//学生作业窗口
+	var studentHomeworkManagerWindowTitleStr = '学生作业窗口';
+	var studentHomeworkInfoWindowStr = '作业要求';
+	var editHomeworkStudentUrl = 'homeworkStudent/editStudentHomework.action';
+	var studentHomeworkInfoStr =  '学生作业信息';
+	
+//检查作业窗口
+	var homeworkCheckManagerWindowTitleStr = '检查学生作业窗口';
+	var updateHomeworkStudentScoreUrl = 'homeworkCheck/updateHomeworkStudentScore.action';
+	var homeworkCheckInfoWindowStr = '学生作业';
+	var homeworkCheckInfoWindowWidth = 900;
+	var homeworkCheckInfoWindowHeight = 600;
+	
+	
+//查看成绩
+	var studentHomeworScorekManagerWindowTitleStr = '学生成绩窗口';
+
+//课程管理员添加作业
+	var homeworkTemplateManagerWindowTitleStr = '课程管理员添加作业';
+	var createHomeworkTemplateUrl = 'homeworkTemplate/createHomeworkTemplate.action';
+	var updateHomeworkTemplateUrl = 'homeworkTemplate/updateHomeworkTemplate.action';
+
+	
+//激活码窗口
+	var activeCodeManagerWindowTitleStr = '课程激活码管理窗口';
+	var activeCodeManagerWindowWidth = 900;
+	var activeCodeManagerWindowHeight = 600;
+	var activeCodeStr = '激活码编号';
+	var studentActiveCodeStr = '学生激活码';
+	var studentActiveTimeStr = '学生激活时间';
+	var createActiveCodeStr = '生成激活码';
+//激活码生成窗口
+	var createActiveCodeWindowTitleStr ='生成激活码';
+	var createActiveCodeWindowWidth =400;
+	var createActiveCodeWindowHeight =100;
+	var activeCodeCountStr = '激活码条数';
+	var activeCodeCountMax = 1000;
+	var createActiveCodesUrl = 'activeCode/createActiveCodes.action';
+	
+//课程管理
+	var courseManagerWindowTitleStr = '课程管理窗口';
+	var courseManagerWindowWidth = 900;
+	var courseManagerWindowHeight = 600;
+
+//课程资源与消息窗口
+	var resourcesAndMsgManagerWindowTitleStr = '课程资源与消息窗口';
+	var resourcesAndMsgManagerWindowWidth = 900;
+	var resourcesAndMsgManagerWindowHeight = 600;
+	
+	
+	var passwordBackInfoActionUrl =  'user/passwordBackInfo.action';
+//	var passwordBackInfoActionUrl =  'user/passwordResetPerson.action';
+	
+	var activeStudentActionUrl = 'student/activeStudent.action';
+
